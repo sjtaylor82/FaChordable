@@ -64,7 +64,7 @@ public sealed class PositionForm : Form
         positionHeading.Text = $"{position.Name} of {chord.Positions.Count}";
         positionHeading.AccessibleName = positionHeading.Text;
         instructions.Text = position.AccessibleText;
-        instructions.AccessibleDescription = $"{positionHeading.Text}. Use Alt+P for the previous position or Alt+N for the next position.";
+        instructions.AccessibleDescription = "Read-only chord position instructions.";
         previousButton.Enabled = positionIndex > 0;
         nextButton.Enabled = positionIndex < chord.Positions.Count - 1;
         audioButton.Enabled = !string.IsNullOrWhiteSpace(position.AudioUrl);
@@ -104,6 +104,5 @@ internal sealed class AccessibleReadOnlyText : RichTextBox
     public void AnnounceChangedText()
     {
         AccessibilityNotifyClients(AccessibleEvents.ValueChange, -1);
-        AccessibilityNotifyClients(AccessibleEvents.NameChange, -1);
     }
 }
