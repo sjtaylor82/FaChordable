@@ -1,0 +1,8 @@
+bin/
+obj/
+publish/
+.vs/
+*.user
+*.suo
+index-debug.html
+chord-debug.html
