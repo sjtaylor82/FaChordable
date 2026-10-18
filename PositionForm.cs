@@ -5,7 +5,17 @@ namespace FaChordable;
 public sealed class PositionForm : Form
 {
     private readonly Label positionHeading = new() { AutoSize = true, Dock = DockStyle.Fill, AccessibleRole = AccessibleRole.StaticText, Font = new Font(SystemFonts.DefaultFont.FontFamily, SystemFonts.DefaultFont.Size + 3, FontStyle.Bold) };
-    private readonly TextBox instructions = new() { Dock = DockStyle.Fill, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, AccessibleName = "Position instructions", TabStop = true };
+    private readonly AccessibleReadOnlyText instructions = new()
+    {
+        Dock = DockStyle.Fill,
+        ReadOnly = true,
+        DetectUrls = false,
+        ScrollBars = RichTextBoxScrollBars.Vertical,
+        AccessibleName = "Position instructions",
+        AccessibleRole = AccessibleRole.Text,
+        TabStop = true,
+        WordWrap = true
+    };
     private readonly Button previousButton = new() { Text = "&Previous position", AutoSize = true };
     private readonly Button nextButton = new() { Text = "&Next position", AutoSize = true };
     private readonly Button audioButton = new() { Text = "Play &audio", AutoSize = true };
@@ -60,8 +70,10 @@ public sealed class PositionForm : Form
         audioButton.Enabled = !string.IsNullOrWhiteSpace(position.AudioUrl);
         audioButton.AccessibleDescription = audioButton.Enabled ? $"Play audio for {position.Name}" : "Audio is unavailable for this position";
         instructions.Focus();
-        instructions.SelectAll();
+        instructions.SelectionStart = 0;
+        instructions.SelectionLength = 0;
         instructions.ScrollToCaret();
+        instructions.AnnounceChangedText();
     }
 
     private void HandleNavigationKeys(object? sender, KeyEventArgs e)
@@ -84,5 +96,14 @@ public sealed class PositionForm : Form
         if (position.AudioUrl is not { Length: > 0 } url) return;
         try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
         catch (Exception ex) { MessageBox.Show(this, $"The audio could not be opened.{Environment.NewLine}{Environment.NewLine}{ex.Message}", "FaChordable", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+    }
+}
+
+internal sealed class AccessibleReadOnlyText : RichTextBox
+{
+    public void AnnounceChangedText()
+    {
+        AccessibilityNotifyClients(AccessibleEvents.ValueChange, -1);
+        AccessibilityNotifyClients(AccessibleEvents.NameChange, -1);
     }
 }

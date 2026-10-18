@@ -6,7 +6,7 @@ An accessible Windows desktop reader for the textual guitar-chord descriptions p
 
 - `Alt+K`, `Alt+T`, and `Alt+S` move to the key, chord type, and subtype lists.
 - `Alt+P` or Enter opens the positions window.
-- The position window opens directly in the read-only instructions. Use normal reading commands or copy the selected text.
+- The position window opens directly in a standard MSAA read-only rich edit control, with its caret at the start. Use normal JAWS reading and edit-navigation commands or copy the text.
 - `Alt+N` or Page Down moves to the next position and reads it. `Alt+P` or Page Up moves to the previous position.
 - `Alt+A` opens that position's audio in the default media application.
 - Escape or `Alt+C` closes the positions window and restores focus to the selected chord.
