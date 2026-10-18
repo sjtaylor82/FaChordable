@@ -132,7 +132,19 @@ public sealed class MainForm : Form
         var progress = new Progress<string>(message => { statusLabel.Text = message; AccessibilityNotifyClients(AccessibleEvents.NameChange, statusLabel.TabIndex); });
         try
         {
-            var updated = await new CatalogueUpdater().DownloadAsync(progress, updateCancellation.Token);
+            statusLabel.Text = "Checking for new chord entries…";
+            var updater = new CatalogueUpdater();
+            var updateAvailable = await updater.IsUpdateAvailableAsync(catalogue, updateCancellation.Token);
+            CatalogueStore.RecordUpdateCheck();
+            if (!updateAvailable)
+            {
+                statusLabel.Text = "The offline chord catalogue is already up to date.";
+                MessageBox.Show(this, statusLabel.Text, "FaChordable update", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            statusLabel.Text = "New chord entries were found. Downloading the updated catalogue…";
+            var updated = await updater.DownloadAsync(progress, updateCancellation.Token);
             await CatalogueStore.SaveAsync(updated);
             catalogue = updated;
             PopulateKeys();

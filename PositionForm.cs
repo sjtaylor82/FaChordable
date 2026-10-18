@@ -5,7 +5,7 @@ namespace FaChordable;
 public sealed class PositionForm : Form
 {
     private readonly Label positionHeading = new() { AutoSize = true, Dock = DockStyle.Fill, AccessibleRole = AccessibleRole.StaticText, Font = new Font(SystemFonts.DefaultFont.FontFamily, SystemFonts.DefaultFont.Size + 3, FontStyle.Bold) };
-    private readonly AccessibleReadOnlyText instructions = new()
+    private readonly RichTextBox instructions = new()
     {
         Dock = DockStyle.Fill,
         ReadOnly = true,
@@ -16,8 +16,8 @@ public sealed class PositionForm : Form
         TabStop = true,
         WordWrap = true
     };
-    private readonly Button previousButton = new() { Text = "&Previous position", AutoSize = true };
-    private readonly Button nextButton = new() { Text = "&Next position", AutoSize = true };
+    private readonly Button previousButton = new() { Text = "Back", AutoSize = true };
+    private readonly Button nextButton = new() { Text = "Next", AutoSize = true };
     private readonly Button audioButton = new() { Text = "Play &audio", AutoSize = true };
     private readonly Button closeButton = new() { Text = "&Close", AutoSize = true, DialogResult = DialogResult.Cancel };
     private readonly Chord chord;
@@ -26,21 +26,32 @@ public sealed class PositionForm : Form
     public PositionForm(Chord chord)
     {
         this.chord = chord;
-        Text = $"{chord.Name} positions";
+        Text = "Chord positions";
         MinimumSize = new(680, 480);
         StartPosition = FormStartPosition.CenterParent;
         AutoScaleMode = AutoScaleMode.Dpi;
         KeyPreview = true;
 
-        var layout = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new(16), ColumnCount = 1, RowCount = 3 };
+        var layout = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new(16), ColumnCount = 4, RowCount = 3 };
+        layout.ColumnStyles.Add(new(SizeType.AutoSize));
+        layout.ColumnStyles.Add(new(SizeType.AutoSize));
+        layout.ColumnStyles.Add(new(SizeType.AutoSize));
+        layout.ColumnStyles.Add(new(SizeType.Percent, 100));
         layout.RowStyles.Add(new(SizeType.AutoSize));
         layout.RowStyles.Add(new(SizeType.Percent, 100));
         layout.RowStyles.Add(new(SizeType.AutoSize));
-        var buttons = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, Padding = new(0, 10, 0, 0), FlowDirection = FlowDirection.LeftToRight, WrapContents = true };
-        buttons.Controls.AddRange([previousButton, nextButton, audioButton, closeButton]);
         layout.Controls.Add(positionHeading, 0, 0);
         layout.Controls.Add(instructions, 0, 1);
-        layout.Controls.Add(buttons, 0, 2);
+        layout.SetColumnSpan(positionHeading, 4);
+        layout.SetColumnSpan(instructions, 4);
+        layout.Controls.Add(previousButton, 0, 2);
+        layout.Controls.Add(nextButton, 1, 2);
+        layout.Controls.Add(audioButton, 2, 2);
+        layout.Controls.Add(closeButton, 3, 2);
+        previousButton.Margin = nextButton.Margin = audioButton.Margin = closeButton.Margin = new Padding(0, 10, 8, 0);
+        previousButton.AccessibleName = "Back";
+        nextButton.AccessibleName = "Next";
+        closeButton.AccessibleName = "Close";
         Controls.Add(layout);
 
         previousButton.Click += (_, _) => MovePosition(-1);
@@ -61,7 +72,7 @@ public sealed class PositionForm : Form
     {
         positionIndex = index;
         var position = chord.Positions[positionIndex];
-        positionHeading.Text = $"{position.Name} of {chord.Positions.Count}";
+        positionHeading.Text = $"{chord.Name}, {position.Name} of {chord.Positions.Count}";
         positionHeading.AccessibleName = positionHeading.Text;
         instructions.Text = position.AccessibleText;
         instructions.AccessibleDescription = "Read-only chord position instructions.";
@@ -73,17 +84,16 @@ public sealed class PositionForm : Form
         instructions.SelectionStart = 0;
         instructions.SelectionLength = 0;
         instructions.ScrollToCaret();
-        instructions.AnnounceChangedText();
     }
 
     private void HandleNavigationKeys(object? sender, KeyEventArgs e)
     {
-        if ((e.Alt && e.KeyCode == Keys.P) || e.KeyCode == Keys.PageUp)
+        if (e.KeyCode == Keys.PageUp)
         {
             MovePosition(-1);
             e.Handled = e.SuppressKeyPress = true;
         }
-        else if ((e.Alt && e.KeyCode == Keys.N) || e.KeyCode == Keys.PageDown)
+        else if (e.KeyCode == Keys.PageDown)
         {
             MovePosition(1);
             e.Handled = e.SuppressKeyPress = true;
@@ -96,13 +106,5 @@ public sealed class PositionForm : Form
         if (position.AudioUrl is not { Length: > 0 } url) return;
         try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
         catch (Exception ex) { MessageBox.Show(this, $"The audio could not be opened.{Environment.NewLine}{Environment.NewLine}{ex.Message}", "FaChordable", MessageBoxButtons.OK, MessageBoxIcon.Error); }
-    }
-}
-
-internal sealed class AccessibleReadOnlyText : RichTextBox
-{
-    public void AnnounceChangedText()
-    {
-        AccessibilityNotifyClients(AccessibleEvents.ValueChange, -1);
     }
 }
