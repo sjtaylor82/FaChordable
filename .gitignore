@@ -4,5 +4,6 @@ publish/
 .vs/
 *.user
 *.suo
+*.zip
 index-debug.html
 chord-debug.html
